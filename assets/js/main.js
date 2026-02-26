@@ -185,6 +185,81 @@
     });
   }
 
+  function initHeroCardSlider() {
+    var card = document.querySelector("[data-hero-card]");
+    if (!card) return;
+    var slides = card.querySelectorAll(".hero-card-slide");
+    var prevBtn = card.querySelector("[data-hero-prev]");
+    var nextBtn = card.querySelector("[data-hero-next]");
+    var counterEl = card.querySelector("[data-hero-counter]");
+    if (!slides.length || !prevBtn || !nextBtn || !counterEl) return;
+
+    var total = slides.length;
+    var current = 0;
+    var autoplayMs = 5000;
+    var autoplayTimer = null;
+
+    function goTo(index) {
+      if (index < 0) index = total - 1;
+      if (index >= total) index = 0;
+      current = index;
+      slides.forEach(function (slide, i) {
+        slide.classList.toggle("is-active", i === current);
+      });
+      if (counterEl) counterEl.textContent = (current + 1) + " / " + total;
+    }
+
+    function startAutoplay() {
+      if (prefersReducedMotion) return;
+      stopAutoplay();
+      autoplayTimer = setInterval(function () {
+        goTo(current + 1);
+      }, autoplayMs);
+    }
+    function stopAutoplay() {
+      if (autoplayTimer) {
+        clearInterval(autoplayTimer);
+        autoplayTimer = null;
+      }
+    }
+
+    prevBtn.addEventListener("click", function () {
+      stopAutoplay();
+      goTo(current - 1);
+      startAutoplay();
+    });
+    nextBtn.addEventListener("click", function () {
+      stopAutoplay();
+      goTo(current + 1);
+      startAutoplay();
+    });
+
+    var touchStartX = 0;
+    var touchEndX = 0;
+    card.addEventListener(
+      "touchstart",
+      function (e) {
+        touchStartX = e.changedTouches[0].screenX;
+      },
+      { passive: true }
+    );
+    card.addEventListener(
+      "touchend",
+      function (e) {
+        touchEndX = e.changedTouches[0].screenX;
+        var diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 50) {
+          stopAutoplay();
+          goTo(diff > 0 ? current + 1 : current - 1);
+          startAutoplay();
+        }
+      },
+      { passive: true }
+    );
+
+    startAutoplay();
+  }
+
   function initGalleryLightbox() {
     var gallery = document.querySelector(".gallery-grid");
     if (!gallery) return;
@@ -298,6 +373,40 @@
     });
   }
 
+  function initFaqAccordion() {
+    var items = document.querySelectorAll("[data-faq-item]");
+    if (!items.length) return;
+
+    items.forEach(function (item) {
+      var btn = item.querySelector("[data-faq-toggle]");
+      var panel = item.querySelector(".faq-answer");
+      if (!btn || !panel) return;
+
+      btn.addEventListener("click", function () {
+        var isOpen = btn.getAttribute("aria-expanded") === "true";
+        var allOpen = document.querySelectorAll(".faq-item.is-open");
+        allOpen.forEach(function (openItem) {
+          var oBtn = openItem.querySelector("[data-faq-toggle]");
+          var oPanel = openItem.querySelector(".faq-answer");
+          if (oBtn && oPanel && openItem !== item) {
+            oBtn.setAttribute("aria-expanded", "false");
+            oPanel.hidden = true;
+            openItem.classList.remove("is-open");
+          }
+        });
+        if (isOpen) {
+          btn.setAttribute("aria-expanded", "false");
+          panel.hidden = true;
+          item.classList.remove("is-open");
+        } else {
+          btn.setAttribute("aria-expanded", "true");
+          panel.hidden = false;
+          item.classList.add("is-open");
+        }
+      });
+    });
+  }
+
   function initAfterPartials() {
     initSmoothScroll(document);
     initStickyHeader();
@@ -305,7 +414,9 @@
     initHeaderBookingDropdown();
     initBookingLinks();
     initMobileBookBar();
+    initHeroCardSlider();
     initGalleryLightbox();
+    initFaqAccordion();
 
     if (window.HenHouseAnimations && typeof window.HenHouseAnimations.init === "function") {
       window.HenHouseAnimations.init({

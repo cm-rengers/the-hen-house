@@ -123,23 +123,47 @@
 
       var hero = document.querySelector("#hero");
       var copy = hero && hero.querySelector(".hero-copy");
+      var lozenges = copy && copy.querySelectorAll(".hero-lozenge");
+      var eyebrow = copy && copy.querySelector(".eyebrow");
       var headline = copy && copy.querySelector(".hero-title");
       var subcopy = copy && copy.querySelector(".hero-subtitle");
       var ctas = copy && copy.querySelector(".hero-ctas");
-      var layers = hero ? hero.querySelectorAll(".hero-image-layer") : [];
+      var sliderCard = hero ? hero.querySelector(".hero-slider-card") : null;
 
-      if (!hero || !copy || !layers.length) return;
+      if (!hero || !copy) return;
 
       var tl = gsap.timeline({
         defaults: { ease: EASE_SOFT },
       });
 
-      // Copy stack: headline → subcopy → CTAs
+      if (lozenges && lozenges.length) {
+        tl.fromTo(
+          lozenges,
+          { autoAlpha: 0, y: 16 },
+          {
+            duration: DURATION_SHORT,
+            autoAlpha: 1,
+            y: 0,
+            stagger: STAGGER_FAST,
+          }
+        );
+      }
+
+      if (eyebrow) {
+        tl.fromTo(
+          eyebrow,
+          { autoAlpha: 0, y: 12 },
+          { duration: DURATION_SHORT, autoAlpha: 1, y: 0 },
+          lozenges && lozenges.length ? "-=0.2" : 0
+        );
+      }
+
       if (headline) {
         tl.fromTo(
           headline,
           { autoAlpha: 0, y: 24 },
-          { duration: DURATION_BASE, autoAlpha: 1, y: 0 }
+          { duration: DURATION_BASE, autoAlpha: 1, y: 0 },
+          "-=0.35"
         );
       }
 
@@ -161,18 +185,19 @@
         );
       }
 
-      tl.fromTo(
-        layers,
-        { autoAlpha: 0, y: 40, scale: 1.02 },
-        {
-          duration: DURATION_BASE,
-          autoAlpha: 1,
-          y: 0,
-          scale: 1,
-          stagger: STAGGER_BASE,
-        },
-        "-=0.35"
-      );
+      if (sliderCard) {
+        tl.fromTo(
+          sliderCard,
+          { autoAlpha: 0, y: 40, scale: 1.02 },
+          {
+            duration: DURATION_BASE,
+            autoAlpha: 1,
+            y: 0,
+            scale: 1,
+          },
+          "-=0.35"
+        );
+      }
     },
 
     heroParallax: function () {
@@ -199,48 +224,15 @@
   };
 
   function tagRevealElements() {
-    // Hero copy
-    var heroCopy = document.querySelector(".hero-copy");
-    if (heroCopy) {
-      heroCopy.setAttribute("data-reveal", "section");
-      heroCopy.classList.add("reveal");
-    }
+    // Hero is animated on load by heroEntrance(), not by scroll reveal — do not tag .hero-copy
 
-    // Story, amenities, gallery, location, testimonial, cta
-    var sections = [
-      ".section-story .story-grid",
-      ".section-amenities .section-heading",
-      ".section-location .location-grid",
-      ".section-testimonial .testimonial-inner",
-      ".section-cta .cta-grid",
-    ];
-
-    sections.forEach(function (selector) {
-      var el = document.querySelector(selector);
-      if (el) {
-        el.setAttribute("data-reveal", "section");
-        el.classList.add("reveal");
-      }
+    // Add .reveal to all elements that have data-reveal or data-reveal-item (for initial hidden state)
+    document.querySelectorAll("[data-reveal='section'], [data-reveal='grid']").forEach(function (el) {
+      el.classList.add("reveal");
     });
-
-    // Grids
-    var amenityGrid = document.querySelector(".amenities-grid");
-    if (amenityGrid) {
-      amenityGrid.setAttribute("data-reveal", "grid");
-      amenityGrid.querySelectorAll(".amenity-card").forEach(function (card) {
-        card.setAttribute("data-reveal-item", "");
-        card.classList.add("reveal");
-      });
-    }
-
-    var galleryGrid = document.querySelector(".gallery-grid");
-    if (galleryGrid) {
-      galleryGrid.setAttribute("data-reveal", "grid");
-      galleryGrid.querySelectorAll(".gallery-item").forEach(function (item) {
-        item.setAttribute("data-reveal-item", "");
-        item.classList.add("reveal");
-      });
-    }
+    document.querySelectorAll("[data-reveal-item]").forEach(function (el) {
+      el.classList.add("reveal");
+    });
   }
 
   function init(options) {
